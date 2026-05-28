@@ -13,6 +13,7 @@ export interface FetchedData {
   compatible: boolean
   extracted?: boolean
   windows?: boolean
+  latestInstallerVersion?: string | null
 }
 
 const client = fetcher({

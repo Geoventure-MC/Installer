@@ -4,20 +4,26 @@ import type { FetchedData } from '@/api'
 import { StatusError } from 'itty-fetcher'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { BIconInfoCircleFill } from 'bootstrap-icons-vue'
 import { baseFetch, download } from '@/api'
 import DownloadView from '@/views/DownloadView.vue'
 import RequirementsView from '@/views/RequirementsView.vue'
+import SuccessView from '@/views/SuccessView.vue'
 
 const { t } = useI18n({ useScope: 'global' })
 
 const preLoading = ref(true)
 const loading = ref(false)
-const step = ref<'requirements' | 'download' | 'error'>('requirements')
+const step = ref<'requirements' | 'download' | 'success' | 'error'>('requirements')
 const data = ref<FetchedData>()
 const errors = reactive<string[]>([])
 const phpIniPath = computed(() => data.value?.phpIniPath ?? t('unknown'))
 
-// Progress tracking for accessibility
+const updateAvailable = computed(() => {
+  if (!data.value?.latestInstallerVersion) return false
+  return data.value.latestInstallerVersion !== data.value.installerVersion
+})
+
 const steps = ['requirements', 'download'] as const
 const currentStepIndex = computed(() => steps.indexOf(step.value as typeof steps[number]))
 
@@ -59,7 +65,7 @@ async function startDownload() {
 
     setTimeout(() => {
       loading.value = false
-      reloadPage()
+      step.value = 'success'
     }, 750)
   } catch (e) {
     catchError(e)
@@ -92,11 +98,39 @@ function clearError(index: number) {
 
 <template>
   <div>
+    <!-- Update available banner -->
+    <div
+      v-if="updateAvailable && data"
+      class="alert alert-warning d-flex align-items-center gap-2 mb-4"
+      role="alert"
+    >
+      <BIconInfoCircleFill class="flex-shrink-0" aria-hidden="true" />
+      <span>
+        <i18n-t keypath="updateAvailable">
+          <template #version>
+            <strong>{{ data.latestInstallerVersion }}</strong>
+          </template>
+          <template #link>
+            <a
+              href="https://github.com/Geoventure-MC/Installer/releases/latest"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="alert-link"
+            >{{ t('updateAvailableLink') }}</a>
+          </template>
+        </i18n-t>
+      </span>
+    </div>
+
     <!-- Progress indicator -->
-    <nav aria-label="Installation progress" class="mb-4" v-if="!preLoading && step !== 'error'">
+    <nav
+      aria-label="Installation progress"
+      class="mb-4"
+      v-if="!preLoading && step !== 'error' && step !== 'success'"
+    >
       <ol class="progress-steps list-unstyled d-flex justify-content-center gap-3 mb-0">
-        <li 
-          v-for="(s, index) in steps" 
+        <li
+          v-for="(s, index) in steps"
           :key="s"
           class="progress-step"
           :class="{
@@ -112,10 +146,10 @@ function clearError(index: number) {
     </nav>
 
     <!-- Error alerts -->
-    <div 
-      v-for="(error, index) in errors" 
-      :key="index" 
-      class="alert alert-danger alert-dismissible fade show d-flex align-items-start" 
+    <div
+      v-for="(error, index) in errors"
+      :key="index"
+      class="alert alert-danger alert-dismissible fade show d-flex align-items-start"
       role="alert"
       aria-live="assertive"
     >
@@ -135,9 +169,9 @@ function clearError(index: number) {
           </i18n-t>
         </div>
       </div>
-      <button 
-        type="button" 
-        class="btn-close" 
+      <button
+        type="button"
+        class="btn-close"
         @click="clearError(index)"
         :aria-label="'Dismiss error'"
       ></button>
@@ -174,6 +208,9 @@ function clearError(index: number) {
         @download="startDownload"
         @error="catchError"
       />
+
+      <!-- Success step -->
+      <SuccessView v-else-if="step === 'success'" />
     </Transition>
   </div>
 </template>
@@ -189,7 +226,6 @@ function clearError(index: number) {
   opacity: 0;
 }
 
-/* Progress steps */
 .progress-steps {
   counter-reset: step;
 }

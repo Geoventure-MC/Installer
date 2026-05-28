@@ -48,177 +48,104 @@ $requiredExtensions = [
 
 set_error_handler(function ($level, $message, $file = 'unknown', $line = 0) {
     http_response_code(500);
-    exit(json_encode(['message' => "A fatal error occurred: {$message} ({$file}:{$line})"]));
+    exit(json_encode(['message' => "A fatal error occurred: {$message} ({$file}:{$line})"]));  
 });
 
 //
 // Some helper functions
 //
 
-/**
- * Parse the PHP version to x.x format.
- *
- * @return string
- */
 function parse_php_version()
 {
     preg_match('/^(\d+)\.(\d+)/', PHP_VERSION, $matches);
-
     if (count($matches) > 2) {
         return "{$matches[1]}.{$matches[2]}";
     }
-
     return PHP_VERSION;
 }
 
-/**
- * Get an item from an array using "dot" notation.
- *
- * @param  array  $array
- * @param  int|string  $key
- * @param  mixed  $default
- *
- * @return mixed
- */
 function array_get($array, $key, $default = null)
 {
     if (array_key_exists($key, $array)) {
         return $array[$key];
     }
-
     if (strpos($key, '.') === false) {
         return isset($array[$key]) ? $array[$key] : $default;
     }
-
     foreach (explode('.', $key) as $segment) {
         if (!array_key_exists($segment, $array)) {
             return $default;
         }
-
         $array = $array[$segment];
     }
-
     return $array;
 }
 
-/**
- * Get the HTTP method of the request.
- *
- * @return string
- */
 function request_method()
 {
     return strtoupper(array_get($_SERVER, 'REQUEST_METHOD', 'GET'));
 }
 
-/**
- * Get the base url of the request.
- *
- * @return string
- */
 function request_url()
 {
     $scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http';
     $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME'];
     $path = !empty($_SERVER['REQUEST_URI']) ? explode('?', $_SERVER['REQUEST_URI'])[0] : '';
-
     return "{$scheme}://{$host}{$path}";
 }
 
-/**
- * Detect whether URL rewrite is effectively enabled for the installer.
- *
- * @return bool
- */
 function detect_url_rewrite()
 {
     global $validInstallationUrlRewrite;
-
     if (isset($validInstallationUrlRewrite) && $validInstallationUrlRewrite === true) {
         return true;
     }
-
-    // IIS exposes whether the current request was rewritten.
     if (array_get($_SERVER, 'IIS_WasUrlRewritten') === '1') {
         return true;
     }
-
-    // Apache usually sets REDIRECT_URL on internally rewritten requests.
     if (array_get($_SERVER, 'REDIRECT_URL') !== null) {
         return true;
     }
-
     return false;
 }
 
 $requestContent = null;
 
-/**
- * Get an input from the request.
- *
- * @param  string  $key
- * @param  mixed  $default
- *
- * @return null|string
- */
 function request_input($key, $default = null)
 {
     global $requestContent;
-
     if (!in_array(request_method(), ['GET', 'HEAD'], true)) {
         if ($requestContent === null) {
             $requestContent = json_decode(file_get_contents('php://input'), true);
         }
-
         if ($requestContent) {
             $value = array_get($requestContent, $key);
-
             if ($value !== null) {
                 return $value;
             }
         }
     }
-
     return array_get($_GET, $key, $default);
 }
 
-/**
- * Send the response as JSON and exit.
- *
- * @param  array  $data
- * @param  int  $status
- */
 function send_json_response($data = null, $status = 200)
 {
     if ($data === null && $status === 200) {
         $status = 204;
     }
-
     if ($status !== 200) {
         http_response_code($status);
     }
-
     header('Content-Type: application/json');
-
     if ($data === null) {
         exit();
     }
-
     exit(json_encode($data));
 }
 
-/**
- * Read the given url as a string.
- *
- * @param  string  $url
- * @param  null|array  $curlOptions
- *
- * @return string
- */
 function read_url($url, $curlOptions = null)
 {
     $ch = curl_init($url);
-
     curl_setopt_array($ch, [
         CURLOPT_CONNECTTIMEOUT => 150,
         CURLOPT_HTTPHEADER => [
@@ -229,57 +156,33 @@ function read_url($url, $curlOptions = null)
         CURLOPT_SSL_VERIFYPEER => true,
         CURLOPT_SSL_VERIFYHOST => 2,
     ]);
-
     if ($curlOptions !== null) {
         curl_setopt_array($ch, $curlOptions);
     }
-
     $response = curl_exec($ch);
     $errno = curl_errno($ch);
-
     if ($errno || $response === false) {
         $error = curl_error($ch);
-
         throw new RuntimeException("cURL error {$errno}: {$error}");
     }
-
     $statusCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-
     if ($statusCode >= 400) {
         throw new RuntimeException("HTTP code {$statusCode} returned for '{$url}'.", $statusCode);
     }
-
     curl_close($ch);
-
     return $response;
 }
 
-/**
- * Download a file from the given url and save it to the given path.
- *
- * @param  string  $url
- * @param  string  $path
- *
- * @return string
- */
 function download_file($url, $path)
 {
     return read_url($url, [CURLOPT_FILE => fopen($path, 'wb+')]);
 }
 
-/**
- * Determines if a function exists and is not disabled.
- *
- * @param  string  $function
- *
- * @return bool
- */
 function has_function($function)
 {
     if (!function_exists($function)) {
         return false;
     }
-
     try {
         return strpos(ini_get('disable_functions'), $function) === false;
     } catch (Exception $e) {
@@ -287,11 +190,6 @@ function has_function($function)
     }
 }
 
-/**
- * Check if the current OS is Windows.
- *
- * @return bool
- */
 function is_windows()
 {
     return stripos(PHP_OS, 'WIN') === 0;
@@ -323,8 +221,6 @@ if (
             'windows' => is_windows(),
         ];
 
-        $step = 'check';
-
         $writable = is_writable(__DIR__) && is_writable(__DIR__ . '/public');
 
         $requirements = [
@@ -341,10 +237,25 @@ if (
         }
 
         $data['requirements'] = $requirements;
-
         $data['compatible'] = !in_array(false, $requirements, true);
         $data['downloaded'] = file_exists(__DIR__ . '/CentralCorpPanel.zip');
         $data['extracted'] = $extracted;
+
+        // Vérification non-bloquante de la dernière version disponible de l'installer
+        $latestInstallerVersion = null;
+        try {
+            $releaseJson = read_url(
+                'https://api.github.com/repos/Geoventure-MC/Installer/releases/latest',
+                [CURLOPT_CONNECTTIMEOUT => 3, CURLOPT_TIMEOUT => 3]
+            );
+            $release = json_decode($releaseJson);
+            if ($release && isset($release->tag_name)) {
+                $latestInstallerVersion = ltrim($release->tag_name, 'v');
+            }
+        } catch (Throwable $e) {
+            // Non-bloquant — GitHub peut être injoignable
+        }
+        $data['latestInstallerVersion'] = $latestInstallerVersion;
 
         $action = request_input('action');
 
@@ -353,7 +264,7 @@ if (
         }
 
         if ($action === 'download') {
-            // Get the latest release from GitHub
+            // Get the latest panel release from GitHub
             $json = read_url('https://api.github.com/repos/CentralCorp/centralpanel-v2/releases/latest');
             $release = json_decode($json);
 
@@ -375,59 +286,67 @@ if (
 
             $file = __DIR__ . '/' . $asset->name;
 
-            // Download
             download_file($asset->browser_download_url, $file);
 
             if (!file_exists($file)) {
                 throw new RuntimeException('The file was not downloaded.');
             }
 
-            // Extract
             $zip = new ZipArchive();
-
             if (($status = $zip->open($file)) !== true) {
                 throw new RuntimeException('Unable to open zip: ' . $status . '.');
             }
-
             if (!$zip->extractTo(__DIR__)) {
                 throw new RuntimeException('Unable to extract zip');
             }
-
             $zip->close();
-            $finalHtaccess = __DIR__ . '/.htaccess';
-            
-            // Define the content of the .htaccess file
-            $htaccessContent = "<IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews
-    </IfModule>
 
-    RewriteEngine On
+            // Générer .htaccess pour Apache
+            $htaccessContent = "<IfModule mod_rewrite.c>\n    <IfModule mod_negotiation.c>\n        Options -MultiViews\n    </IfModule>\n\n    RewriteEngine On\n\n    # Handle Authorization Header\n    RewriteCond %{HTTP:Authorization} .\n    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\n\n    # Empecher l'accès aux fichiers sensibles\n    RewriteRule ^(.env|composer.json|package.json)$ - [F,L]\n\n    # Rediriger vers le dossier public\n    RewriteCond %{REQUEST_FILENAME} -d [OR]\n    RewriteCond %{REQUEST_FILENAME} -f\n    RewriteRule ^ ^$1 [N]\n\n    RewriteCond %{REQUEST_URI} (\.\w+$) [NC]\n    RewriteRule ^(.*)$ public/$1\n\n    RewriteCond %{REQUEST_FILENAME} !-d\n    RewriteCond %{REQUEST_FILENAME} !-f\n    RewriteRule ^ server.php [L]\n</IfModule>";
+            file_put_contents(__DIR__ . '/.htaccess', $htaccessContent);
 
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+            // Générer web.config pour Windows IIS
+            if (is_windows()) {
+                $webConfigRoot = '<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <system.webServer>
+        <rewrite>
+            <rules>
+                <rule name="Redirect to public" stopProcessing="true">
+                    <match url="^(?!public/)(.*)$" />
+                    <conditions>
+                        <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                        <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="public/{R:1}" />
+                </rule>
+            </rules>
+        </rewrite>
+    </system.webServer>
+</configuration>';
+                file_put_contents(__DIR__ . '/web.config', $webConfigRoot);
 
-    # Empecher l'accès aux fichiers sensibles
-    RewriteRule ^(.env|composer.json|package.json)$ - [F,L]
+                $webConfigPublic = '<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <system.webServer>
+        <rewrite>
+            <rules>
+                <rule name="Main Rule" stopProcessing="true">
+                    <match url=".*" />
+                    <conditions logicalGrouping="MatchAll">
+                        <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                        <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="server.php" />
+                </rule>
+            </rules>
+        </rewrite>
+    </system.webServer>
+</configuration>';
+                file_put_contents(__DIR__ . '/public/web.config', $webConfigPublic);
+            }
 
-    # Rediriger vers le dossier public
-    RewriteCond %{REQUEST_FILENAME} -d [OR]
-    RewriteCond %{REQUEST_FILENAME} -f
-    RewriteRule ^ ^$1 [N]
-
-    RewriteCond %{REQUEST_URI} (\.\w+$) [NC]
-    RewriteRule ^(.*)$ public/$1
-
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ server.php [L]
-</IfModule>";
-
-            // Write the .htaccess file
-            file_put_contents($finalHtaccess, $htaccessContent);
-
-            // Cleanup zip file
+            // Cleanup zip
             if (file_exists($file)) {
                 unlink($file);
             }

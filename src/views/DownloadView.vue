@@ -12,9 +12,9 @@ defineProps<{ loading: boolean }>()
   <div class="text-center py-3">
     <!-- Download icon -->
     <div class="mb-4">
-      <BIconCloudDownloadFill 
-        class="text-primary display-1" 
-        aria-hidden="true" 
+      <BIconCloudDownloadFill
+        class="text-primary display-1"
+        aria-hidden="true"
       />
     </div>
 
@@ -27,16 +27,16 @@ defineProps<{ loading: boolean }>()
     </p>
 
     <!-- Download button -->
-    <button 
+    <button
       type="button"
-      @click="emit('download')" 
+      @click="emit('download')"
       :disabled="loading"
       class="btn btn-primary btn-lg rounded-pill px-5"
       :aria-busy="loading"
     >
       <template v-if="loading">
         <BIconArrowRepeat class="spin me-2" aria-hidden="true" />
-        <span>Downloading...</span>
+        <span>{{ t('download.downloading') }}</span>
       </template>
       <template v-else>
         <BIconCloudDownloadFill class="me-2" aria-hidden="true" />
@@ -47,29 +47,22 @@ defineProps<{ loading: boolean }>()
     <!-- Loading indicator -->
     <div v-if="loading" class="mt-4" role="status" aria-live="polite">
       <div class="progress" style="height: 6px; max-width: 300px; margin: 0 auto;">
-        <div 
-          class="progress-bar progress-bar-striped progress-bar-animated" 
-          role="progressbar" 
+        <div
+          class="progress-bar progress-bar-striped progress-bar-animated"
+          role="progressbar"
           style="width: 100%"
           aria-label="Download in progress"
         ></div>
       </div>
-      <p class="text-muted small mt-2 mb-0">
-        <span class="visually-hidden">Download in progress.</span>
-        Please wait...
-      </p>
+      <p class="text-muted small mt-2 mb-0">{{ t('download.pleaseWait') }}</p>
     </div>
   </div>
 </template>
 
 <style scoped>
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .spin {

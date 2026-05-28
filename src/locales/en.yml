@@ -5,8 +5,10 @@ error: 'An error occurred: {error}'
 welcome: 'CentralCorp Panel is the management panel for CentralCorp Launcher'
 copyright: 'Copyright © {year} CentralCorp - All rights reserved.'
 unknown: 'Unknown'
-
 documentation: 'Documentation'
+
+updateAvailable: 'A newer version of the installer ({version}) is available. {link} to get the latest fixes.'
+updateAvailableLink: 'Download it'
 
 help:
   curl60: 'You can follow the steps in the {docs} to solve this issue. Path of the php.ini: {path}'
@@ -27,9 +29,23 @@ requirements:
 
   missing: "Your server doesn't have the necessary requirements to install CentralCorp Panel."
   recheck: 'Recheck'
-  success: 'Your server has the prerequisites to install CentralCorp Panel, you can continue the installation !'
+  success: 'Your server has the prerequisites to install CentralCorp Panel, you can continue the installation!'
 
 download:
   title: 'Download'
   info: 'CentralCorp Panel can now be downloaded, this operation may take a few minutes...'
   go: 'Download'
+  downloading: 'Downloading...'
+  pleaseWait: 'Please wait, this may take a few minutes.'
+
+success:
+  title: 'Installation complete!'
+  subtitle: 'CentralCorp Panel has been successfully installed on your server.'
+  nextSteps: 'Next steps'
+  step1: 'Wait 30–60 seconds for the panel to initialize'
+  step2: 'Open your domain in a browser to complete the setup wizard'
+  step3: 'Create your administrator account'
+  step4: 'Configure your Minecraft servers and connect the Conflictura Launcher'
+  openPanel: 'Open the panel'
+  getLauncher: 'Download the Launcher'
+  deleteNote: 'Once setup is complete, you can safely delete the installer files (index.php, .htaccess, public/).'
