@@ -3,12 +3,12 @@
 
 /**
  * Build script for CentralCorp Panel Installer
- * 
+ *
  * This script:
  * 1. Runs the Vite build
  * 2. Copies assets to the correct location
  * 3. Updates index.php with the correct asset filenames
- * 4. Creates a deployable ZIP file
+ * 4. Creates a deployable ZIP file (self-contained, no CDN dependency)
  */
 
 import fs from 'fs';
@@ -26,16 +26,7 @@ const BACKEND_DIR = path.join(ROOT_DIR, 'backend');
 const PUBLIC_ASSETS_DIR = path.join(BACKEND_DIR, 'public', 'assets');
 const OUTPUT_ZIP = path.join(ROOT_DIR, 'installer.zip');
 
-// CDN Configuration
-// Set CDN_BASE_URL environment variable to load assets from CDN
-// Example: CDN_BASE_URL=https://cdn.jsdelivr.net/gh/CentralCorp/Installer@1.2.0/backend/public npm run build:prod
-const CDN_BASE_URL = process.env.CDN_BASE_URL || '';
-const USE_CDN = CDN_BASE_URL.length > 0;
-
 console.log('🔨 Building CentralCorp Panel Installer...\n');
-if (USE_CDN) {
-    console.log(`🌐 CDN Mode: Assets will be loaded from ${CDN_BASE_URL}\n`);
-}
 
 // Step 1: Run Vite build
 console.log('📦 Running Vite build...');
@@ -84,31 +75,27 @@ for (const file of assetFiles) {
 }
 
 // Step 4: Update backend/index.php with correct asset filenames
+// Always use local /assets/ paths — the ZIP is self-contained.
+// The .htaccess rewrites /assets/* → public/assets/* so files are served correctly.
 console.log('\n✏️  Updating backend/index.php with new asset filenames...');
 const indexPhpPath = path.join(BACKEND_DIR, 'index.php');
 let indexPhpContent = fs.readFileSync(indexPhpPath, 'utf8');
 
-// Determine asset base path (CDN or local)
-const assetBasePath = USE_CDN ? `${CDN_BASE_URL}/assets` : '/assets';
-
-// Replace JS file reference (supports both local /assets/ and CDN URLs)
+// Replace JS file reference
 indexPhpContent = indexPhpContent.replace(
     /src="[^"]*\/assets\/index-[^"]+\.js"/,
-    `src="${assetBasePath}/${jsFile}"`
+    `src="/assets/${jsFile}"`
 );
 
-// Replace CSS file reference (supports both local /assets/ and CDN URLs)
+// Replace CSS file reference
 indexPhpContent = indexPhpContent.replace(
     /href="[^"]*\/assets\/index-[^"]+\.css"/,
-    `href="${assetBasePath}/${cssFile}"`
+    `href="/assets/${cssFile}"`
 );
 
 fs.writeFileSync(indexPhpPath, indexPhpContent);
-console.log(`   Updated asset references in index.php`);
-if (USE_CDN) {
-    console.log(`   JS:  ${assetBasePath}/${jsFile}`);
-    console.log(`   CSS: ${assetBasePath}/${cssFile}`);
-}
+console.log(`   JS:  /assets/${jsFile}`);
+console.log(`   CSS: /assets/${cssFile}`);
 
 // Step 5: Create ZIP file
 console.log('\n📦 Creating installer.zip...');

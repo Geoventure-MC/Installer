@@ -60,10 +60,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build frontend assets
-        run: npm run build-only
+      - name: Build installer package
+        run: npm run package
 
-      - name: Push assets to dist branch (jsDelivr CDN)
+      - name: Push assets to dist branch (jsDelivr CDN reference)
         run: |
           cp -r dist/assets /tmp/installer-assets
 
@@ -83,14 +83,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.version-bump.outputs.sha }}
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build installer package (CDN mode)
-        run: npm run package
-        env:
-          CDN_BASE_URL: https://cdn.jsdelivr.net/gh/${{ github.repository }}@dist/backend/public
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
