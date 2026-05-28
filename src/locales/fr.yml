@@ -10,6 +10,11 @@ documentation: 'documentation'
 updateAvailable: "Une version plus récente de l'installateur ({version}) est disponible. {link} pour avoir les derniers correctifs."
 updateAvailableLink: 'Téléchargez-la'
 
+steps:
+  requirements: 'Prérequis'
+  setup: 'Configuration'
+  download: 'Installation'
+
 help:
   curl60: 'Vous pouvez suivre les étapes dans la {docs} pour corriger ce problème. Chemin du fichier php.ini : {path}'
 
@@ -24,12 +29,32 @@ requirements:
     writable: "Vous pouvez essayer de faire cette commande pour autoriser l'écriture : `{command}`."
     rewrite: "Vous pouvez suivre les instructions dans notre {docs} pour activer la réécriture d'URL."
     htaccess: "Le fichier `.htaccess` ou `public/.htaccess` est manquant. Assurez-vous d'avoir activé les fichiers cachés et que le fichier est bien présent."
-    extension: 'Vous pouvez essayer de faire cette commande pour installer les extensions PHP manquantes : `{command}`.\n Une fois fait, redémarrez Apache ou Nginx.'
-    function: 'Cette fonction peut être activée dans le fichier php.ini (`{path}`), en modifiant la valeur de `disable_functions`. Sur un hébergement web mutualisé, vous devrez peut être contacter leur support.'
+    extension: "Vous pouvez essayer de faire cette commande pour installer les extensions PHP manquantes : `{command}`.\n Une fois fait, redémarrez Apache ou Nginx."
+    function: "Cette fonction peut être activée dans le fichier php.ini (`{path}`), en modifiant la valeur de `disable_functions`. Sur un hébergement web mutualisé, vous devrez peut-être contacter leur support."
 
   missing: "Votre serveur n'a pas les pré-requis nécessaires pour installer CentralCorp Panel."
   recheck: 'Revérifier'
   success: "Votre serveur a les pré-requis pour installer CentralCorp Panel, vous pouvez continuer l'installation !"
+
+setup:
+  title: 'Configuration des serveurs'
+  subtitle: 'Configurez vos serveurs et les mods optionnels. Vous pouvez passer cette étape et y revenir plus tard.'
+  serversTab: 'Serveurs'
+  modsTab: 'Mods optionnels'
+  serversHint: "Entrez l'URL AzAuth et l'URL de configuration du Launcher pour chaque serveur. Laissez vide pour ignorer."
+  authUrl: 'URL Auth (AzAuth)'
+  authUrlPlaceholder: 'https://auth.exemple.com/'
+  settingsUrl: 'URL Settings (Launcher)'
+  settingsUrlPlaceholder: 'https://panel.exemple.com/'
+  modsHint: 'Définissez les mods optionnels que les joueurs peuvent activer ou désactiver dans le Launcher.'
+  modName: 'Nom du mod'
+  modFileName: 'Nom du fichier (ex: optifine.jar)'
+  modDescription: 'Description'
+  modRecommended: 'Rec.'
+  modEnabled: 'Actif'
+  addMod: 'Ajouter un mod'
+  removeMod: 'Supprimer'
+  saving: 'Sauvegarde...'
 
 download:
   title: 'Téléchargement'
@@ -42,10 +67,12 @@ success:
   title: 'Installation terminée !'
   subtitle: 'CentralCorp Panel a été installé avec succès sur votre serveur.'
   nextSteps: 'Prochaines étapes'
-  step1: 'Attendez 30 à 60 secondes que le panel s'initialise'
-  step2: 'Ouvrez votre domaine dans un navigateur pour terminer l'assistant de configuration'
+  step1: "Attendez 30 à 60 secondes que le panel s'initialise"
+  step2: "Ouvrez votre domaine dans un navigateur pour terminer l'assistant de configuration"
   step3: 'Créez votre compte administrateur'
   step4: 'Configurez vos serveurs Minecraft et connectez le Conflictura Launcher'
   openPanel: 'Accéder au panel'
   getLauncher: 'Télécharger le Launcher'
+  downloadLauncherConfig: 'Télécharger launcher-config.json'
+  downloadLauncherConfigHint: 'Partagez ce fichier avec vos joueurs pour que le Launcher soit pré-configuré avec vos URLs.'
   deleteNote: "Une fois la configuration terminée, vous pouvez supprimer les fichiers de l'installateur (index.php, .htaccess, public/)."
