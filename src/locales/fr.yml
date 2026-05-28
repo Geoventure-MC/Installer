@@ -29,8 +29,8 @@ requirements:
     writable: "Vous pouvez essayer de faire cette commande pour autoriser l'écriture : `{command}`."
     rewrite: "Vous pouvez suivre les instructions dans notre {docs} pour activer la réécriture d'URL."
     htaccess: "Le fichier `.htaccess` ou `public/.htaccess` est manquant. Assurez-vous d'avoir activé les fichiers cachés et que le fichier est bien présent."
-    extension: 'Vous pouvez essayer de faire cette commande pour installer les extensions PHP manquantes : `{command}`.\n Une fois fait, redémarrez Apache ou Nginx.'
-    function: 'Cette fonction peut être activée dans le fichier php.ini (`{path}`), en modifiant la valeur de `disable_functions`. Sur un hébergement web mutualisé, vous devrez peut être contacter leur support.'
+    extension: "Vous pouvez essayer de faire cette commande pour installer les extensions PHP manquantes : `{command}`.\n Une fois fait, redémarrez Apache ou Nginx."
+    function: "Cette fonction peut être activée dans le fichier php.ini (`{path}`), en modifiant la valeur de `disable_functions`. Sur un hébergement web mutualisé, vous devrez peut-être contacter leur support."
 
   missing: "Votre serveur n'a pas les pré-requis nécessaires pour installer CentralCorp Panel."
   recheck: 'Revérifier'
@@ -67,8 +67,8 @@ success:
   title: 'Installation terminée !'
   subtitle: 'CentralCorp Panel a été installé avec succès sur votre serveur.'
   nextSteps: 'Prochaines étapes'
-  step1: 'Attendez 30 à 60 secondes que le panel s'initialise'
-  step2: 'Ouvrez votre domaine dans un navigateur pour terminer l'assistant de configuration'
+  step1: "Attendez 30 à 60 secondes que le panel s'initialise"
+  step2: "Ouvrez votre domaine dans un navigateur pour terminer l'assistant de configuration"
   step3: 'Créez votre compte administrateur'
   step4: 'Configurez vos serveurs Minecraft et connectez le Conflictura Launcher'
   openPanel: 'Accéder au panel'
