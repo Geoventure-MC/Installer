@@ -60,8 +60,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build installer package
-        run: npm run package
+      - name: Build frontend assets
+        run: npm run build-only
 
       - name: Push assets to dist branch (jsDelivr CDN reference)
         run: |
@@ -83,6 +83,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.version-bump.outputs.sha }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build installer package (self-contained ZIP)
+        run: npm run package
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
