@@ -1,7 +1,7 @@
 ---
 tags: [installer, panel, centralcorp, geoventure, index]
 updated: 2026-05-28
-version: 1.2.0
+version: auto (CI bump)
 related: launcher
 ---
 
@@ -23,7 +23,11 @@ related: launcher
 - `src/views/RequirementsView.vue` — Vérification prérequis PHP
 - `src/views/DownloadView.vue` — Téléchargement et extraction
 - `backend/index.php` — Backend PHP standalone
-- `scripts/build.js` — Packaging de l'archive déployable
+- `scripts/build.js` — Packaging de l'archive déployable (CDN mode)
+
+### CI/CD
+- `.github/workflows/release.yml` — Auto-bump + build CDN + GitHub Release (branch `master`)
+- `.github/workflows/tests.yml` — Lint + build sur chaque push/PR
 
 ---
 
@@ -32,9 +36,31 @@ related: launcher
 | Paramètre | Valeur |
 |---|---|
 | Projet | CentralCorp Installer |
-| Version | **1.2.0** |
+| Version | auto (CI bump à chaque push master) |
 | Stack frontend | Vue 3 + TypeScript + Vite |
 | Backend | PHP standalone (`index.php`) |
+| Assets | jsDelivr CDN (branche `dist`) |
+
+---
+
+## CI/CD — Workflow auto-release
+
+```
+git push master
+    ↓
+job: version-bump
+    → npm version patch  (ex: 1.2.3 → 1.2.4)
+    → sed sync $installerVersion dans index.php
+    → git push [skip ci]
+    ↓
+job: build-and-release
+    → npm run build-only  (Vite)
+    → push dist/assets/ → branche dist (jsDelivr)
+    → npm run package --CDN_BASE_URL  → installer.zip
+    → GitHub Release v1.2.4
+```
+
+**Ne jamais bumper manuellement** — le CI le fait.
 
 ---
 
@@ -67,25 +93,20 @@ related: launcher
 
 ---
 
-## Versions & releases
-
-| Version | Notes |
-|---|---|
-| 1.2.0 | Version actuelle — stable |
-
----
-
 ## Scripts utiles
 
 ```bash
 # Dev
 npm run dev
 
-# Build frontend
+# Build frontend seulement
 npm run build
 
 # Package complet (dist + backend PHP → archive)
 npm run package
+
+# Package CDN (assets sur jsDelivr)
+CDN_BASE_URL=https://cdn.jsdelivr.net/gh/Geoventure-MC/Installer@dist/backend/public npm run package
 
 # Snapshot contexte (pour IA / debugging)
 ./memory.sh
@@ -96,13 +117,13 @@ npm run package
 
 ## Checklist déploiement
 
-- [ ] Bumper version dans `package.json`
-- [ ] `npm run build` — vérifier pas d'erreurs TypeScript
-- [ ] `npm run package` — générer l'archive
-- [ ] Uploader l'archive sur le serveur cible
-- [ ] Vérifier la page d'installation en navigateur
-- [ ] Confirmer que le Launcher se connecte bien au panel après installation
-- [ ] Créer la Release GitHub
+- [ ] Coder la feature / fix
+- [ ] Tester en local (`npm run dev` + serveur PHP)
+- [ ] `git commit + push master`
+- [ ] CI bumpe la version automatiquement
+- [ ] Vérifier la Release sur [GitHub Releases](https://github.com/Geoventure-MC/Installer/releases)
+- [ ] Vérifier que `installer.zip` fonctionne sur un serveur test
+- [ ] Attendre la propagation jsDelivr (~1-2 min) si premiers assets
 
 ---
 
@@ -114,5 +135,6 @@ npm run package
 | Vite | https://vitejs.dev |
 | Bootstrap 5 | https://getbootstrap.com |
 | vue-i18n | https://vue-i18n.intlify.dev |
+| jsDelivr | https://www.jsdelivr.com |
 | Launcher (repo lié) | https://github.com/Geoventure-MC/Launcher |
 | Discord Geoventure | https://discord.gg/VCmNXHvf77 |

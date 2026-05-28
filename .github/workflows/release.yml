@@ -1,22 +1,59 @@
-name: Release
+name: Installer Build & Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ master ]
+
+permissions:
+  contents: write
 
 jobs:
-  build:
+  version-bump:
     runs-on: ubuntu-latest
-    
+    outputs:
+      sha: ${{ steps.bump.outputs.sha }}
+      version: ${{ steps.bump.outputs.version }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
         with:
-          node-version: '20'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          npm version patch --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          sed -i "s/\$installerVersion = '[^']*';/\$installerVersion = '${NEW_VERSION}';/" backend/index.php
+          git add package.json backend/index.php
+          git commit -m "chore: bump version to v${NEW_VERSION} [skip ci]"
+          git push origin master
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "Bumped to v${NEW_VERSION}"
+
+  build-and-release:
+    needs: version-bump
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version-bump.outputs.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -25,56 +62,40 @@ jobs:
       - name: Build frontend assets
         run: npm run build-only
 
-      - name: Copy assets to backend
+      - name: Push assets to dist branch (jsDelivr CDN)
         run: |
-          mkdir -p backend/public/assets
-          cp -r dist/assets/* backend/public/assets/
+          cp -r dist/assets /tmp/installer-assets
 
-      - name: Push assets to dist branch
-        run: |
-          # Save assets to temp directory
-          mkdir -p /tmp/assets-backup
-          cp -r backend/public/assets/* /tmp/assets-backup/
-          
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Create orphan dist branch with only assets
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git checkout --orphan dist-temp
           git reset --hard
-          git clean -fd
-          
-          # Restore assets and commit
+          git clean -fdx
+
           mkdir -p backend/public/assets
-          cp -r /tmp/assets-backup/* backend/public/assets/
+          cp -r /tmp/installer-assets/* backend/public/assets/
           git add -f backend/public/assets/
-          git commit -m "Assets for ${{ github.ref_name }}"
-          
-          # Force push to dist branch
+          git commit -m "assets: v${{ needs.version-bump.outputs.version }}"
           git push origin dist-temp:dist --force
 
-      - name: Checkout again for package build
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          clean: true
+          ref: ${{ needs.version-bump.outputs.sha }}
 
-      - name: Setup Node.js again
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies again
+      - name: Install dependencies
         run: npm ci
 
-      - name: Build installer package with CDN
+      - name: Build installer package (CDN mode)
         run: npm run package
         env:
           CDN_BASE_URL: https://cdn.jsdelivr.net/gh/${{ github.repository }}@dist/backend/public
 
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ needs.version-bump.outputs.version }}
+          name: v${{ needs.version-bump.outputs.version }}
           files: installer.zip
           generate_release_notes: true
         env:
