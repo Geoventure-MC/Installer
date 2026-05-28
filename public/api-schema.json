@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1.0.0",
+  "description": "CentralCorp Panel — Conflictura Launcher API contract",
+  "updatedAt": "2026-05-28",
+  "endpoints": {
+    "GET /data/": {
+      "description": "Launcher configuration for a specific server",
+      "required": ["game_version", "loader", "verify", "status"],
+      "shape": {
+        "game_version": "string (e.g. '1.20.1')",
+        "loader": { "type": "forge|fabric|neoforge|vanilla", "build": "string", "enable": "boolean" },
+        "verify": "boolean",
+        "status": { "ip": "string", "port": "integer", "nameServer": "string" },
+        "java": "string",
+        "dataDirectory": "string",
+        "server_icon": "string (URL)",
+        "news": "array",
+        "role": "boolean",
+        "whitelist_activate": "boolean",
+        "whitelist": "string[]",
+        "whitelist_roles": "string[]",
+        "alert_activate": "boolean",
+        "alert_msg": "string",
+        "alert_scroll": "boolean",
+        "video_activate": "boolean",
+        "video_url": "string (YouTube ID)",
+        "video_type": "short|video"
+      }
+    },
+    "GET /api/servers/status": {
+      "description": "Real-time status for all servers managed by this panel",
+      "shape": [{ "id": "string", "name": "string", "online": "boolean", "players": "integer", "maxPlayers": "integer", "ping": "integer", "version": "string" }]
+    },
+    "GET /api/notifications": {
+      "description": "Active announcements from the panel",
+      "shape": [{ "id": "integer", "type": "info|warning|maintenance|event", "message": "string", "url": "string|null", "expiresAt": "ISO8601|null", "createdAt": "ISO8601" }]
+    },
+    "GET /api/mods": {
+      "description": "Optional mods available for a server",
+      "shape": [{ "name": "string", "fileName": "string", "description": "string", "recommended": "boolean", "enabled": "boolean" }]
+    },
+    "POST /api/telemetry": {
+      "description": "Opt-in telemetry from the Launcher",
+      "request": { "event": "launch|close|update|error", "serverId": "string", "launcherVersion": "string", "os": "string", "sessionDuration": "integer" }
+    },
+    "GET /api/launcher-config": {
+      "description": "Pre-configured launcher-config.json for admin to distribute to players",
+      "shape": { "panelUrl": "string", "generatedAt": "ISO8601", "servers": [{ "id": "string", "name": "string", "color": "string", "authUrl": "string", "settings": "string" }] }
+    }
+  }
+}

@@ -5,8 +5,15 @@ error: 'An error occurred: {error}'
 welcome: 'CentralCorp Panel is the management panel for CentralCorp Launcher'
 copyright: 'Copyright © {year} CentralCorp - All rights reserved.'
 unknown: 'Unknown'
-
 documentation: 'Documentation'
+
+updateAvailable: 'A newer version of the installer ({version}) is available. {link} to get the latest fixes.'
+updateAvailableLink: 'Download it'
+
+steps:
+  requirements: 'Requirements'
+  setup: 'Configuration'
+  download: 'Installation'
 
 help:
   curl60: 'You can follow the steps in the {docs} to solve this issue. Path of the php.ini: {path}'
@@ -27,9 +34,45 @@ requirements:
 
   missing: "Your server doesn't have the necessary requirements to install CentralCorp Panel."
   recheck: 'Recheck'
-  success: 'Your server has the prerequisites to install CentralCorp Panel, you can continue the installation !'
+  success: 'Your server has the prerequisites to install CentralCorp Panel, you can continue the installation!'
+
+setup:
+  title: 'Server Configuration'
+  subtitle: 'Configure your servers and optional mods. You can skip this step and come back later.'
+  serversTab: 'Servers'
+  modsTab: 'Optional Mods'
+  serversHint: 'Enter the AzAuth URL and the Launcher settings URL for each server. Leave blank to skip.'
+  authUrl: 'Auth URL (AzAuth)'
+  authUrlPlaceholder: 'https://auth.example.com/'
+  settingsUrl: 'Settings URL (Launcher)'
+  settingsUrlPlaceholder: 'https://panel.example.com/'
+  modsHint: 'Define the optional mods players can enable or disable in the Launcher.'
+  modName: 'Mod name'
+  modFileName: 'File name (e.g. optifine.jar)'
+  modDescription: 'Description'
+  modRecommended: 'Rec.'
+  modEnabled: 'On'
+  addMod: 'Add a mod'
+  removeMod: 'Remove'
+  saving: 'Saving...'
 
 download:
   title: 'Download'
   info: 'CentralCorp Panel can now be downloaded, this operation may take a few minutes...'
   go: 'Download'
+  downloading: 'Downloading...'
+  pleaseWait: 'Please wait, this may take a few minutes.'
+
+success:
+  title: 'Installation complete!'
+  subtitle: 'CentralCorp Panel has been successfully installed on your server.'
+  nextSteps: 'Next steps'
+  step1: 'Wait 30–60 seconds for the panel to initialize'
+  step2: 'Open your domain in a browser to complete the setup wizard'
+  step3: 'Create your administrator account'
+  step4: 'Configure your Minecraft servers and connect the Conflictura Launcher'
+  openPanel: 'Open the panel'
+  getLauncher: 'Download the Launcher'
+  downloadLauncherConfig: 'Download launcher-config.json'
+  downloadLauncherConfigHint: 'Share this file with your players so the Launcher is pre-configured with your server URLs.'
+  deleteNote: 'Once setup is complete, you can safely delete the installer files (index.php, .htaccess, public/).'
