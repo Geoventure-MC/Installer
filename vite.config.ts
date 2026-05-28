@@ -1,8 +1,7 @@
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 import path from 'path'
-import type { Plugin, Connect } from 'vite'
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { Plugin } from 'vite'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -35,7 +34,7 @@ function phpBackendMock(): Plugin {
     latestInstallerVersion: null,
   }
 
-  const mockAuthConfig = {
+  const mockAuthConfig: Record<string, Record<string, string>> = {
     geoventure: { authUrl: 'https://launcher.bmeouchi.fr/', settings: 'https://geoventure.bmeouchi.fr/', name: 'Geoventure', color: '#4ade80', description: 'Aventure & Exploration' },
     elandor:    { authUrl: '', settings: '', name: 'Elandor', color: '#a78bfa', description: 'RPG & Fantaisie' },
     pokeland:   { authUrl: '', settings: '', name: 'Pokeland', color: '#fb923c', description: 'Pokémon & Combat' },
@@ -47,12 +46,14 @@ function phpBackendMock(): Plugin {
     { id: 1, type: 'info', message: 'Bienvenue sur CentralCorp Panel !', url: null, expiresAt: null, createdAt: new Date().toISOString() },
   ]
 
-  function readBody(req: IncomingMessage): Promise<Record<string, unknown>> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function readBody(req: any): Promise<Record<string, unknown>> {
     return new Promise((resolve) => {
       let body = ''
-      req.on('data', (chunk: Buffer) => { body += chunk.toString() })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      req.on('data', (chunk: any) => { body += String(chunk) })
       req.on('end', () => {
-        try { resolve(JSON.parse(body)) } catch { resolve({}) }
+        try { resolve(JSON.parse(body) as Record<string, unknown>) } catch { resolve({}) }
       })
     })
   }
@@ -60,7 +61,8 @@ function phpBackendMock(): Plugin {
   return {
     name: 'php-backend-mock',
     configureServer(server) {
-      server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: Connect.NextFunction) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      server.middlewares.use((req: any, res: any, next: any) => {
         const url = new URL(req.url ?? '/', 'http://localhost')
         if (url.searchParams.get('execute') !== 'php') return next()
 
@@ -102,37 +104,38 @@ function phpBackendMock(): Plugin {
         }
 
         if (req.method === 'POST') {
-          const body = await readBody(req)
-          const postAction = (body.action as string) ?? action
+          readBody(req).then((body) => {
+            const postAction = (body.action as string) ?? action
 
-          if (postAction === 'auth-config') {
-            Object.assign(mockAuthConfig, body.data ?? {})
-            res.end(JSON.stringify({ saved: true }))
-            return
-          }
-          if (postAction === 'mods-config') {
-            mockMods.length = 0
-            mockMods.push(...((body.data as typeof mockMods) ?? []))
-            res.end(JSON.stringify({ saved: true }))
-            return
-          }
-          if (postAction === 'notifications') {
-            const d = (body.data ?? {}) as Record<string, unknown>
-            mockNotifications.push({ id: Date.now(), type: (d.type as string) ?? 'info', message: d.message as string, url: null, expiresAt: null, createdAt: new Date().toISOString() })
-            res.end(JSON.stringify({ saved: true }))
-            return
-          }
-          if (postAction === 'telemetry') {
-            console.log('[mock telemetry]', body.data)
-            res.end(JSON.stringify({ received: true }))
-            return
-          }
-          if (postAction === 'download') {
-            setTimeout(() => res.end(JSON.stringify({ ...mockData, extracted: true })), 1500)
-            return
-          }
+            if (postAction === 'auth-config') {
+              Object.assign(mockAuthConfig, (body.data as Record<string, Record<string, string>>) ?? {})
+              res.end(JSON.stringify({ saved: true }))
+              return
+            }
+            if (postAction === 'mods-config') {
+              mockMods.length = 0
+              mockMods.push(...((body.data as typeof mockMods) ?? []))
+              res.end(JSON.stringify({ saved: true }))
+              return
+            }
+            if (postAction === 'notifications') {
+              const d = (body.data ?? {}) as Record<string, unknown>
+              mockNotifications.push({ id: Date.now(), type: (d.type as string) ?? 'info', message: d.message as string, url: null, expiresAt: null, createdAt: new Date().toISOString() })
+              res.end(JSON.stringify({ saved: true }))
+              return
+            }
+            if (postAction === 'telemetry') {
+              console.log('[mock telemetry]', body.data)
+              res.end(JSON.stringify({ received: true }))
+              return
+            }
+            if (postAction === 'download') {
+              setTimeout(() => res.end(JSON.stringify({ ...mockData, extracted: true })), 1500)
+              return
+            }
 
-          res.end(JSON.stringify({ ...mockData, extracted: true }))
+            res.end(JSON.stringify({ ...mockData, extracted: true }))
+          }).catch(() => next())
           return
         }
 
