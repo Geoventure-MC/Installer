@@ -95,8 +95,32 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.version-bump.outputs.version }}
-          name: v${{ needs.version-bump.outputs.version }}
-          files: installer.zip
+          name: "CentralCorp Installer v${{ needs.version-bump.outputs.version }}"
+          body: |
+            ## CentralCorp Installer v${{ needs.version-bump.outputs.version }}
+
+            ### Téléchargement
+
+            **[Télécharger `installer.zip`](https://github.com/Geoventure-MC/Installer/releases/download/v${{ needs.version-bump.outputs.version }}/installer.zip)**
+
+            ### Comment installer
+
+            1. Télécharge `installer.zip` ci-dessous
+            2. Extrais le contenu à la racine de ton site web
+            3. Ouvre ton navigateur et navigue vers ton domaine
+            4. Suis les étapes affichées par l’installateur
+
+            ### Prérequis serveur
+
+            - PHP 8.2+
+            - Extensions : `bcmath` `curl` `fileinfo` `mbstring` `openssl` `PDO` `xml` `zip`
+            - Apache avec `mod_rewrite` ou Nginx
+
+            > Besoin d’aide ? Rejoins le [Discord Geoventure](https://discord.gg/VCmNXHvf77)
+
+            ---
           generate_release_notes: true
+          append_body: true
+          files: installer.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

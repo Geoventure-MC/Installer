@@ -1,0 +1,20 @@
+changelog:
+  categories:
+    - title: "Nouveautés"
+      labels:
+        - feature
+        - feat
+        - enhancement
+    - title: "Corrections de bugs"
+      labels:
+        - bug
+        - fix
+        - bugfix
+    - title: "Compatibilité PHP & Serveur"
+      labels:
+        - php
+        - server
+        - compat
+    - title: "Autres changements"
+      labels:
+        - "*"
