@@ -576,7 +576,7 @@ if (
         }
 
         if ($action === 'download') {
-            $json = read_url('https://api.github.com/repos/CentralCorp/centralpanel-v2/releases/latest');
+            $json = read_url('https://api.github.com/repos/Geoventure-MC/panel/releases/latest');
             $release = json_decode($json);
 
             if (!$release || !isset($release->assets)) {
