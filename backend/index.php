@@ -27,7 +27,7 @@
  *
  * @author CentralCorp
  */
-$installerVersion = '1.2.4';
+$installerVersion = '1.2.5';
 
 $minPhpVersion = '8.2';
 
