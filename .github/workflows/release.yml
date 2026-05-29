@@ -94,28 +94,55 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.version-bump.outputs.version }}
-          name: "CentralCorp Installer v${{ needs.version-bump.outputs.version }}"
+          name: "🎮 CentralCorp Installer v${{ needs.version-bump.outputs.version }}"
           body: |
-            ## CentralCorp Installer v${{ needs.version-bump.outputs.version }}
+            ## 🎮 CentralCorp Installer v${{ needs.version-bump.outputs.version }}
 
-            ### Téléchargement
+            Installe ton panel CentralCorp en quelques clics — **aucune compétence technique requise** ! 🚀
 
-            **[⬇️ Télécharger `installer.zip`](https://github.com/Geoventure-MC/Installer/releases/download/v${{ needs.version-bump.outputs.version }}/installer.zip)**
+            ---
 
-            ### Comment installer
+            ### ⬇️ Télécharger
 
-            1. Télécharge `installer.zip` ci-dessous
-            2. Extrais le contenu **à la racine de ton site web**
-            3. Ouvre ton navigateur et navigue vers ton domaine
-            4. Suis les étapes affichées par l'installateur
+            > ### 👉 [**📦 Télécharger installer.zip**](https://github.com/Geoventure-MC/Installer/releases/download/v${{ needs.version-bump.outputs.version }}/installer.zip)
 
-            ### Prérequis serveur
+            ---
 
-            - PHP **8.2+**
-            - Extensions : `bcmath` `curl` `fileinfo` `mbstring` `openssl` `PDO` `xml` `zip`
-            - Apache avec `mod_rewrite` ou Nginx
+            ### 🚀 Installation en 4 étapes
 
-            > Besoin d'aide ? Rejoins le [Discord Geoventure](https://discord.gg/VCmNXHvf77)
+            1. **Télécharge** le fichier `installer.zip` ci-dessous
+            2. **Extrais** son contenu à la racine de ton site web (dossier `www`, `public_html`, `htdocs`…)
+            3. **Ouvre** ton domaine dans un navigateur (ex : `https://tonsite.fr`)
+            4. **Laisse-toi guider** par l'assistant — il s'occupe de tout ✨
+
+            ---
+
+            ### ✨ Ce que l'installateur fait pour toi
+
+            - ✅ Vérifie automatiquement que ton serveur est compatible
+            - 🎛️ Configure tes serveurs (Geoventure, Elandor, Pokeland) et l'auth du launcher
+            - 📥 Télécharge et installe le panel tout seul
+            - 🩺 Vérifie que tout fonctionne après l'installation (diagnostic intégré)
+            - 📱 Te donne les liens + un QR code pour télécharger le launcher
+            - 🔔 Peut prévenir ton serveur Discord quand l'installation est terminée
+            - 🔒 Supprime l'installateur en 1 clic pour sécuriser ton site
+
+            ---
+
+            ### 🖥️ Prérequis serveur
+
+            | Besoin | Détail |
+            |--------|--------|
+            | **PHP** | version **8.2** ou plus récente |
+            | **Extensions** | `bcmath` `curl` `fileinfo` `mbstring` `openssl` `PDO` `xml` `zip` |
+            | **Serveur web** | Apache (avec `mod_rewrite`) ou Nginx |
+
+            ---
+
+            ### ❓ Besoin d'aide ?
+
+            - 🩺 La page finale contient un **bouton de diagnostic** qui t'indique précisément ce qui ne va pas
+            - 💬 Rejoins le [**Discord Geoventure**](https://discord.gg/VCmNXHvf77) — on est là pour t'aider !
           files: installer.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
