@@ -61,6 +61,26 @@ export interface ModConfig {
   enabled: boolean
 }
 
+export interface HealthCheckItem {
+  id: string
+  ok: boolean
+  detail?: string
+}
+
+export interface HealthReport {
+  checks: HealthCheckItem[]
+  allOk: boolean
+}
+
+export interface LauncherReleases {
+  version: string | null
+  page: string
+  windows: string | null
+  mac: string | null
+  linux: string | null
+  error?: string
+}
+
 const client = fetcher({
   base: window.location.href,
   headers: {
@@ -104,6 +124,11 @@ export function getLauncherConfigUrl(): string {
   return `${base}?execute=php&action=launcher-config`
 }
 
+export function getInstallReportUrl(): string {
+  const base = window.location.href.split('?')[0]
+  return `${base}?execute=php&action=install-report`
+}
+
 export function getNotifications(): Promise<Notification[]> {
   return actionGet<Notification[]>('notifications')
 }
@@ -114,4 +139,23 @@ export function getModsConfig(): Promise<ModConfig[]> {
 
 export function saveModsConfig(mods: ModConfig[]): Promise<{ saved: boolean }> {
   return client.post('', { action: 'mods-config', data: mods })
+}
+
+export function getHealthCheck(): Promise<HealthReport> {
+  return actionGet<HealthReport>('health-check')
+}
+
+export function getLauncherReleases(): Promise<LauncherReleases> {
+  return actionGet<LauncherReleases>('launcher-releases')
+}
+
+export function sendDiscordNotification(
+  webhookUrl: string,
+  panelUrl: string,
+): Promise<{ sent: boolean }> {
+  return client.post('', { action: 'discord-notify', data: { webhookUrl, panelUrl } })
+}
+
+export function selfDestruct(): Promise<{ deleted: string[] }> {
+  return client.post('', { action: 'self-destruct' })
 }

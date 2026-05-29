@@ -76,3 +76,33 @@ success:
   downloadLauncherConfig: 'Télécharger launcher-config.json'
   downloadLauncherConfigHint: 'Partagez ce fichier avec vos joueurs pour que le Launcher soit pré-configuré avec vos URLs.'
   deleteNote: "Une fois la configuration terminée, vous pouvez supprimer les fichiers de l'installateur (index.php, .htaccess, public/)."
+  healthTitle: 'Vérification post-installation'
+  healthRerun: 'Relancer'
+  healthChecking: 'Vérification...'
+  healthAllOk: 'Tout est opérationnel !'
+  healthSomeFailed: "Certains points nécessitent votre attention."
+  health_files: 'Fichiers du panel extraits'
+  health_env: "Configuration créée (.env)"
+  health_htaccess: "Réécriture d'URL (.htaccess)"
+  health_http: 'Le panel répond en HTTP'
+  health_auth: 'Auth du launcher configurée'
+  launcherTitle: 'Télécharger le launcher'
+  launcherWindows: 'Windows'
+  launcherMac: 'macOS'
+  launcherLinux: 'Linux'
+  launcherQrHint: 'Scannez pour télécharger sur un autre appareil'
+  launcherUnavailable: 'Voir les versions sur GitHub'
+  reportTitle: "Rapport d'installation & notification"
+  downloadReport: 'Télécharger le rapport (.json)'
+  discordPlaceholder: 'URL du webhook Discord'
+  discordSend: 'Notifier Discord'
+  discordSending: 'Envoi...'
+  discordSent: 'Notification envoyée !'
+  discordError: "Impossible d'envoyer la notification. Vérifiez l'URL du webhook."
+  securityTitle: "Sécurité — supprimer l'installateur"
+  securityHint: "Par sécurité, supprimez les fichiers de l'installateur maintenant que l'installation est terminée. Cette action est irréversible."
+  securityButton: "Supprimer l'installateur"
+  securityConfirm: "Êtes-vous sûr ? L'installateur sera définitivement supprimé."
+  securityDeleting: 'Suppression...'
+  securityDone: "Installateur supprimé. Vous pouvez fermer cette page en toute sécurité."
+  securityError: "Impossible de supprimer les fichiers. Supprimez index.php et storage/ manuellement."

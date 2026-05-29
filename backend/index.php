@@ -27,7 +27,7 @@
  *
  * @author CentralCorp
  */
-$installerVersion = '1.2.5';
+$installerVersion = '1.2.4';
 
 $minPhpVersion = '8.2';
 
@@ -92,6 +92,13 @@ function request_url()
     $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME'];
     $path = !empty($_SERVER['REQUEST_URI']) ? explode('?', $_SERVER['REQUEST_URI'])[0] : '';
     return "{$scheme}://{$host}{$path}";
+}
+
+function site_root_url()
+{
+    $scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http';
+    $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : ($_SERVER['SERVER_NAME'] ?? 'localhost');
+    return "{$scheme}://{$host}/";
 }
 
 function detect_url_rewrite()
@@ -225,6 +232,19 @@ function write_storage($file, $data)
     file_put_contents(__DIR__ . '/storage/' . $file, json_encode($data, JSON_PRETTY_PRINT));
 }
 
+function delete_directory($dir)
+{
+    if (!is_dir($dir)) return false;
+    $items = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::CHILD_FIRST
+    );
+    foreach ($items as $item) {
+        $item->isDir() ? @rmdir($item->getRealPath()) : @unlink($item->getRealPath());
+    }
+    return @rmdir($dir);
+}
+
 if (array_get($_GET, 'phpinfo') === '') {
     phpinfo();
     exit();
@@ -285,7 +305,7 @@ if (
 
         $action = request_input('action');
 
-        // ─ Feature 1: API schema ────────────────────────────────────────
+        // ─ Feature 1: API schema ───────────────────────────────────
         if ($action === 'api-schema') {
             $schemaPath = __DIR__ . '/public/api-schema.json';
             if (file_exists($schemaPath)) {
@@ -295,7 +315,7 @@ if (
             send_json_response(['error' => 'Schema not found'], 404);
         }
 
-        // ─ Feature 5: Launcher config download ───────────────────────
+        // ─ Feature 5: Launcher config download ───────────────
         if ($action === 'launcher-config') {
             $authConfig = read_storage('auth-config.json');
             $defaultServers = [
@@ -318,12 +338,12 @@ if (
             send_json_response(['panelUrl' => request_url(), 'generatedAt' => date('c'), 'servers' => $servers]);
         }
 
-        // ─ Feature 6 & 8: Auth config GET ───────────────────────────
+        // ─ Feature 6 & 8: Auth config GET ───────────────────
         if ($action === 'auth-config' && request_method() !== 'POST') {
             send_json_response(read_storage('auth-config.json'));
         }
 
-        // ─ Feature 4: Notifications GET ─────────────────────────────
+        // ─ Feature 4: Notifications GET ────────────────────
         if ($action === 'notifications' && request_method() !== 'POST') {
             $notifications = read_storage('notifications.json');
             $now = time();
@@ -333,12 +353,12 @@ if (
             send_json_response($active);
         }
 
-        // ─ Feature 3: Mods config GET ────────────────────────────────
+        // ─ Feature 3: Mods config GET ─────────────────────
         if ($action === 'mods-config' && request_method() !== 'POST') {
             send_json_response(read_storage('mods-config.json'));
         }
 
-        // ─ Feature 2: Servers status ─────────────────────────────────
+        // ─ Feature 2: Servers status ──────────────────────
         if ($action === 'servers-status') {
             $authConfig = read_storage('auth-config.json');
             $statuses = [];
@@ -356,12 +376,114 @@ if (
             send_json_response($statuses);
         }
 
-        // ─ Default GET response ──────────────────────────────────────
+        // ─ Post-install: Health check ──────────────────────
+        if ($action === 'health-check') {
+            $checks = [];
+            $checks[] = ['id' => 'files', 'ok' => file_exists(__DIR__ . '/vendor') && file_exists(__DIR__ . '/server.php')];
+            $checks[] = ['id' => 'env', 'ok' => file_exists(__DIR__ . '/.env')];
+            $checks[] = ['id' => 'htaccess', 'ok' => file_exists(__DIR__ . '/.htaccess')];
+
+            $httpOk = false;
+            $httpDetail = '';
+            try {
+                $ch = curl_init(site_root_url());
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_CONNECTTIMEOUT => 5,
+                    CURLOPT_TIMEOUT => 8,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => 0,
+                    CURLOPT_USERAGENT => 'CentralCorp Installer Health',
+                ]);
+                curl_exec($ch);
+                $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+                curl_close($ch);
+                $httpOk = $code >= 200 && $code < 400;
+                $httpDetail = 'HTTP ' . $code;
+            } catch (Throwable $e) {
+                $httpDetail = $e->getMessage();
+            }
+            $checks[] = ['id' => 'http', 'ok' => $httpOk, 'detail' => $httpDetail];
+
+            $authConfig = read_storage('auth-config.json');
+            $checks[] = ['id' => 'auth', 'ok' => !empty($authConfig['geoventure']['authUrl'])];
+
+            $allOk = true;
+            foreach ($checks as $c) {
+                if (!$c['ok']) { $allOk = false; break; }
+            }
+            send_json_response(['checks' => $checks, 'allOk' => $allOk]);
+        }
+
+        // ─ Post-install: Launcher releases ─────────────────
+        if ($action === 'launcher-releases') {
+            $out = [
+                'version' => null,
+                'page'    => 'https://github.com/Geoventure-MC/Launcher/releases',
+                'windows' => null,
+                'mac'     => null,
+                'linux'   => null,
+            ];
+            try {
+                $json = read_url(
+                    'https://api.github.com/repos/Geoventure-MC/launcher/releases/latest',
+                    [CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_TIMEOUT => 8]
+                );
+                $release = json_decode($json, true);
+                if (is_array($release)) {
+                    $out['version'] = $release['tag_name'] ?? null;
+                    $out['page'] = $release['html_url'] ?? $out['page'];
+                    foreach (($release['assets'] ?? []) as $a) {
+                        $name = strtolower($a['name'] ?? '');
+                        $url = $a['browser_download_url'] ?? null;
+                        if (!$url) continue;
+                        if (str_ends_with($name, '.exe')) {
+                            $out['windows'] = $url;
+                        } elseif (str_ends_with($name, '.dmg')) {
+                            $out['mac'] = $url;
+                        } elseif (str_ends_with($name, '.appimage')) {
+                            $out['linux'] = $url;
+                        }
+                    }
+                }
+            } catch (Throwable $e) {
+                $out['error'] = $e->getMessage();
+            }
+            send_json_response($out);
+        }
+
+        // ─ Post-install: Installation report ───────────────
+        if ($action === 'install-report') {
+            $authConfig = read_storage('auth-config.json');
+            $servers = [];
+            foreach ($authConfig as $id => $cfg) {
+                if (!is_array($cfg)) continue;
+                $servers[] = [
+                    'id'       => $id,
+                    'name'     => $cfg['name'] ?? $id,
+                    'authUrl'  => $cfg['authUrl'] ?? '',
+                    'settings' => $cfg['settings'] ?? '',
+                ];
+            }
+            send_json_response([
+                'installerVersion' => $installerVersion,
+                'generatedAt'      => date('c'),
+                'php'              => PHP_VERSION,
+                'os'               => PHP_OS,
+                'panelUrl'         => site_root_url(),
+                'panelExtracted'   => file_exists(__DIR__ . '/vendor'),
+                'envCreated'       => file_exists(__DIR__ . '/.env'),
+                'servers'          => $servers,
+            ]);
+        }
+
+        // ─ Default GET response ──────────────────────────
         if (request_method() !== 'POST') {
             send_json_response($data);
         }
 
-        // ─ POST actions ─────────────────────────────────────────────
+        // ─ POST actions ──────────────────────────────
 
         if ($action === 'auth-config') {
             $body = request_body();
@@ -407,6 +529,50 @@ if (
             ensure_storage();
             file_put_contents(__DIR__ . '/storage/telemetry.jsonl', json_encode($entry) . "\n", FILE_APPEND | LOCK_EX);
             send_json_response(['received' => true]);
+        }
+
+        // ─ Post-install: Discord webhook notification ────────
+        if ($action === 'discord-notify') {
+            $body = request_body();
+            $webhook = $body['data']['webhookUrl'] ?? '';
+            if (!is_string($webhook) || !preg_match('#^https://(discord\.com|discordapp\.com|ptb\.discord\.com|canary\.discord\.com)/api/webhooks/#', $webhook)) {
+                send_json_response(['message' => 'Invalid Discord webhook URL'], 400);
+            }
+            $panelUrl = $body['data']['panelUrl'] ?? site_root_url();
+            $payload = [
+                'username' => 'CentralCorp Installer',
+                'embeds' => [[
+                    'title'       => '✅ Panel installé avec succès',
+                    'description' => "Le CentralCorp Panel vient d'être installé.\n\n**URL :** {$panelUrl}",
+                    'color'       => 5763719,
+                    'footer'      => ['text' => 'CentralCorp Installer v' . $installerVersion],
+                    'timestamp'   => date('c'),
+                ]],
+            ];
+            try {
+                read_url($webhook, [
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => json_encode($payload),
+                    CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'User-Agent: CentralCorp Installer'],
+                    CURLOPT_CONNECTTIMEOUT => 5,
+                    CURLOPT_TIMEOUT => 8,
+                ]);
+                send_json_response(['sent' => true]);
+            } catch (Throwable $e) {
+                send_json_response(['message' => $e->getMessage()], 502);
+            }
+        }
+
+        // ─ Post-install: Self-destruct (security) ────────────
+        if ($action === 'self-destruct') {
+            $deleted = [];
+            if (delete_directory(__DIR__ . '/storage')) {
+                $deleted[] = 'storage/';
+            }
+            if (@unlink(__FILE__)) {
+                $deleted[] = 'index.php';
+            }
+            send_json_response(['deleted' => $deleted]);
         }
 
         if ($action === 'download') {
