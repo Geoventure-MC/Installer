@@ -57,6 +57,9 @@ function phpBackendMock(): Plugin {
         if (action === 'auth-config' && req.method === 'GET') { res.end(JSON.stringify(mockAuthConfig)); return }
         if (action === 'notifications' && req.method === 'GET') { res.end(JSON.stringify(mockNotifications)); return }
         if (action === 'mods-config' && req.method === 'GET') { res.end(JSON.stringify(mockMods)); return }
+        if (action === 'health-check') { res.end(JSON.stringify({ checks: [{ id: 'files', ok: true }, { id: 'env', ok: false }, { id: 'htaccess', ok: true }, { id: 'http', ok: true, detail: 'HTTP 200' }, { id: 'auth', ok: true }], allOk: false })); return }
+        if (action === 'launcher-releases') { res.end(JSON.stringify({ version: 'v4.0.7', page: 'https://github.com/Geoventure-MC/Launcher/releases', windows: 'https://example.com/launcher.exe', mac: null, linux: 'https://example.com/launcher.AppImage' })); return }
+        if (action === 'install-report') { res.end(JSON.stringify({ installerVersion: '1.2.0', generatedAt: new Date().toISOString(), php: '8.2.26', os: 'Linux', panelUrl: 'http://localhost:5173/', panelExtracted: false, envCreated: false, servers: [] })); return }
         if (req.method === 'GET') { res.end(JSON.stringify(mockData)); return }
 
         if (req.method === 'POST') {
@@ -66,6 +69,8 @@ function phpBackendMock(): Plugin {
             if (postAction === 'mods-config') { mockMods.length = 0; mockMods.push(...((body.data as typeof mockMods) ?? [])); res.end(JSON.stringify({ saved: true })); return }
             if (postAction === 'notifications') { const d = (body.data ?? {}) as Record<string, unknown>; mockNotifications.push({ id: Date.now(), type: (d.type as string) ?? 'info', message: d.message as string, url: null, expiresAt: null, createdAt: new Date().toISOString() }); res.end(JSON.stringify({ saved: true })); return }
             if (postAction === 'telemetry') { console.log('[mock telemetry]', body.data); res.end(JSON.stringify({ received: true })); return }
+            if (postAction === 'discord-notify') { console.log('[mock discord]', body.data); res.end(JSON.stringify({ sent: true })); return }
+            if (postAction === 'self-destruct') { res.end(JSON.stringify({ deleted: ['storage/', 'index.php'] })); return }
             if (postAction === 'download') { setTimeout(() => res.end(JSON.stringify({ ...mockData, extracted: true })), 1500); return }
             res.end(JSON.stringify({ ...mockData, extracted: true }))
           }).catch(() => next())
