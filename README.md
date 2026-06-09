@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="https://centralcorp.github.io/img/panel.png" alt="CentralCorp Panel" width="100"/>
+<img src="https://raw.githubusercontent.com/Geoventure-MC/Launcher/master/src/assets/images/icon.png" alt="Geoventure Panel" width="100"/>
 
-# CentralCorp Installer
+# Geoventure Installer
 
-**Installateur automatique du panneau CentralCorp**
+**Installateur automatique du panneau Geoventure**
 
 [![Dernière version](https://img.shields.io/github/v/release/Geoventure-MC/Installer?style=flat-square&label=version&color=6366f1)](https://github.com/Geoventure-MC/Installer/releases/latest)
 [![Build](https://img.shields.io/github/actions/workflow/status/Geoventure-MC/Installer/release.yml?branch=master&style=flat-square&label=build)](https://github.com/Geoventure-MC/Installer/actions)
@@ -19,9 +19,9 @@
 
 ## Présentation
 
-Le **CentralCorp Installer** est un outil web qui installe automatiquement le **panneau CentralCorp** sur ton serveur en quelques clics — pas besoin de ligne de commande ni de configuration manuelle.
+Le **Geoventure Installer** est un outil web qui installe automatiquement le **panneau Geoventure** sur ton serveur en quelques clics — pas besoin de ligne de commande ni de configuration manuelle.
 
-Une fois installé, le panneau sert de backend au **[Conflictura Launcher](https://github.com/Geoventure-MC/Launcher)** : authentification des joueurs, gestion des mods, configuration des serveurs Minecraft.
+Une fois installé, le panneau sert de backend au **[Nexus Launcher](https://github.com/Geoventure-MC/Launcher)** : authentification des joueurs, gestion des mods, configuration des serveurs Minecraft.
 
 ---
 
@@ -66,7 +66,7 @@ Ton serveur web doit avoir :
 4. Le panneau est téléchargé et installé
 5. Suis les étapes de configuration du panneau
 
-> **Note** : une fois l’installation terminée, le fichier `index.php` de l’installer est remplacé par le panneau CentralCorp. Tu n’as pas besoin de le supprimer manuellement.
+> **Note** : une fois l’installation terminée, le fichier `index.php` de l’installer est remplacé par le panneau Geoventure. Tu n’as pas besoin de le supprimer manuellement.
 
 ---
 
@@ -100,11 +100,11 @@ chown -R www-data:www-data /var/www/html
 ## Relation avec le Launcher
 
 ```
-CentralCorp Installer
+Geoventure Installer
        ↓ installe
-CentralCorp Panel  ←  backend API
+Geoventure Panel  ←  backend API
        ↕
-Conflictura Launcher  →  Minecraft 1.20.1
+Nexus Launcher  →  Minecraft 1.20.1
 ```
 
 Le panneau installé gère :
