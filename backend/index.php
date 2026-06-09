@@ -606,6 +606,19 @@ if (
             if (($status = $zip->open($file)) !== true) {
                 throw new RuntimeException('Unable to open zip: ' . $status . '.');
             }
+            $realBase = realpath(__DIR__);
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $name = $zip->getNameIndex($i);
+                $dest = realpath($realBase . '/' . dirname($name));
+                if ($dest === false) {
+                    $dest = $realBase . '/' . dirname($name);
+                }
+                if (strpos($dest, $realBase) !== 0) {
+                    $zip->close();
+                    @unlink($file);
+                    throw new RuntimeException('Path traversal detected in ZIP entry: ' . $name);
+                }
+            }
             if (!$zip->extractTo(__DIR__)) {
                 throw new RuntimeException('Unable to extract zip');
             }
