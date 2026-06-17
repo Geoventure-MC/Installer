@@ -70,6 +70,28 @@ Ton serveur web doit avoir :
 
 ---
 
+## Nouveautes v1.2.11
+
+### Protection contre le path traversal
+
+L'extraction des fichiers ZIP valide désormais chaque chemin avant écriture. Les entrées contenant des séquences `../` ou des chemins absolus sont rejetées, empêchant toute attaque de type **directory traversal** qui pourrait écrire en dehors du répertoire d'installation.
+
+### Health checks automatiques
+
+Avant de lancer l'installation du panneau, l'installer vérifie automatiquement :
+
+- **Version PHP** — PHP 8.2+ requis, détecté et affiché
+- **Extensions PHP** — chaque extension nécessaire (`bcmath`, `curl`, `zip`, `mbstring`, etc.) est testée individuellement
+- **Configuration serveur** — droits d'écriture, `mod_rewrite` (Apache), connectivité réseau
+
+Si un prérequis manque, un message explicite indique la marche à suivre **avant** de télécharger quoi que ce soit.
+
+### ZIP autonome
+
+L'installer est entièrement **autonome** : tous les assets (CSS, JS, images, polices) sont embarqués localement dans le ZIP. Aucune dépendance CDN externe — l'installation fonctionne même sur un serveur sans accès internet sortant (hors téléchargement du panneau lui-même).
+
+---
+
 ## Dépannage
 
 ### PHP n’est pas exécuté
