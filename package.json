@@ -1,6 +1,6 @@
 {
   "name": "Centralcorp-installer",
-  "version": "1.2.11",
+  "version": "1.2.12",
   "license": "MIT",
   "type": "module",
   "scripts": {
