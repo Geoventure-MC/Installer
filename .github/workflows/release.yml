@@ -2,8 +2,7 @@ name: Installer Build & Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -13,43 +12,91 @@ jobs:
   build-and-release:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     steps:
       - uses: actions/checkout@v4
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Decide release
+        id: decide
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "bump=patch"   >> "$GITHUB_OUTPUT"
+            echo "Manual dispatch -> release (patch)"; exit 0
+          fi
+          LAST_TAG=$(git describe --tags --match 'v*' --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then RANGE="${LAST_TAG}..HEAD"; else RANGE=""; fi
+          LOG=$(git log $RANGE --no-merges --pretty=format:'%s' | grep -v '\[skip ci\]' || true)
+          if [ -z "$(printf '%s' "$LOG" | tr -d '[:space:]')" ]; then
+            echo "No new commits -> skip"; echo "release=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          NONTRIVIAL=0; BUMP="patch"
+          while IFS= read -r MSG; do
+            [ -z "$MSG" ] && continue
+            case "$MSG" in
+              docs:*|chore:*|style:*|ci:*|test:*|refactor:*|build:*) continue ;;
+              "📝"*|"📚"*|"🔄"*|"✅"*|"🔖"*|"💚"*|"👷"*|"📄"*) continue ;;
+            esac
+            NONTRIVIAL=1
+            if printf '%s' "$MSG" | grep -qiE 'breaking change|!:'; then BUMP="major";
+            elif printf '%s' "$MSG" | grep -qiE '^feat(\(.+\))?:|^feature|✨|🎉|🚀'; then
+              [ "$BUMP" != "major" ] && BUMP="minor"; fi
+          done <<EOF
+          $LOG
+          EOF
+          if [ "$NONTRIVIAL" = "0" ]; then
+            echo "Only trivial commits -> skip release"; echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"; echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
+            echo "Release -> bump=$BUMP"
+          fi
+
       - uses: actions/setup-node@v4
+        if: steps.decide.outputs.release == 'true'
         with:
           node-version: 22
           cache: 'npm'
 
-      - name: Determine version
+      - name: Compute version
         id: version
+        if: steps.decide.outputs.release == 'true'
         run: |
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            VERSION="${GITHUB_REF_NAME#v}"
-          else
-            VERSION=$(node -p "require('./package.json').version")
-          fi
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "Using version: ${VERSION}"
-
-      - name: Sync version to package.json and backend
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          npm version "${VERSION}" --no-git-tag-version --allow-same-version
-          sed -i "s/\$installerVersion = '[^']*';/\$installerVersion = '${VERSION}';/" backend/index.php
+          BUMP="${{ steps.decide.outputs.bump }}"
+          NEW_VERSION=$(npm version "$BUMP" --no-git-tag-version)
+          NEW_VERSION="${NEW_VERSION#v}"
+          sed -i -E "s/(\\\$installerVersion[[:space:]]*=[[:space:]]*')[^']*(')/\1${NEW_VERSION}\2/" backend/index.php
+          echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "New version: ${NEW_VERSION} (bump=${BUMP})"
 
       - name: Install dependencies
+        if: steps.decide.outputs.release == 'true'
         run: npm ci
 
       - name: Build frontend assets
+        if: steps.decide.outputs.release == 'true'
         run: npm run build
 
       - name: Build installer package (self-contained ZIP)
+        if: steps.decide.outputs.release == 'true'
         run: npm run package
 
+      - name: Commit version bump
+        if: steps.decide.outputs.release == 'true'
+        run: |
+          git add package.json backend/index.php
+          git commit -m "chore: release v${{ steps.version.outputs.version }} [skip ci]" || exit 0
+          git push origin HEAD:master
+
       - name: Create GitHub Release
+        if: steps.decide.outputs.release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
