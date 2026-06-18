@@ -2,7 +2,7 @@
 
 > Fichier de mémoire pour Claude Code. À placer à la racine du repo `panel`
 > (et idéalement une copie dans `installer` et `launcher`).
-> Dernière mise à jour : 2026-05-29.
+> Dernière mise à jour : 2026-06-18.
 
 ## 🎯 Vue d'ensemble
 
@@ -11,7 +11,7 @@ Trois dépôts qui **travaillent ensemble** :
 | Repo | Stack | Rôle |
 |------|-------|------|
 | `geoventure-mc/panel` | **Laravel 11 + PHP 8.2** (Blade, Bootstrap) | Panel d'admin web : crée les users, gère serveurs/mods/loader/whitelist/RPC/UI, **expose la config au launcher** via `/utils/*` et `/data` |
-| `geoventure-mc/launcher` | **Electron 37 + JS vanilla** | App de jeu. Lit la config du panel. `env: "panel"` (NE JAMAIS CHANGER). `settings: https://launcher.bmeouchi.fr/` |
+| `geoventure-mc/launcher` | **Electron 37 + JS vanilla** | App de jeu. Lit la config du panel. `env: "panel"` (NE JAMAIS CHANGER). `settings: https://launcher.geoventure.fr/` |
 | `geoventure-mc/installer` | **Vue 3 + TS + Vite + PHP** | Installe le panel sur le serveur web (télécharge `panel-*.zip` depuis `CentralCorp/centralpanel-v2`) |
 
 3 serveurs gérés : **Geoventure** (#4ade80), **Elandor** (#a78bfa), **Pokeland** (#fb923c). Forge 1.20.1-47.4.20.
