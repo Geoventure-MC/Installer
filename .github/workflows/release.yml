@@ -2,54 +2,20 @@ name: Installer Build & Release
 
 on:
   push:
-    branches: [ master ]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  version-bump:
-    runs-on: ubuntu-latest
-    outputs:
-      sha: ${{ steps.bump.outputs.sha }}
-      version: ${{ steps.bump.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Bump patch version
-        id: bump
-        run: |
-          npm version patch --no-git-tag-version
-          NEW_VERSION=$(node -p "require('./package.json').version")
-          sed -i "s/\$installerVersion = '[^']*';/\$installerVersion = '${NEW_VERSION}';/" backend/index.php
-          git add package.json backend/index.php
-          git commit -m "chore: bump version to v${NEW_VERSION} [skip ci]"
-          git push origin master
-          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-          echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
-          echo "Bumped to v${NEW_VERSION}"
-
   build-and-release:
-    needs: version-bump
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.version-bump.outputs.sha }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
@@ -57,35 +23,28 @@ jobs:
           node-version: 22
           cache: 'npm'
 
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Using version: ${VERSION}"
+
+      - name: Sync version to package.json and backend
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          npm version "${VERSION}" --no-git-tag-version --allow-same-version
+          sed -i "s/\$installerVersion = '[^']*';/\$installerVersion = '${VERSION}';/" backend/index.php
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build frontend assets
-        run: npm run build-only
-
-      - name: Push assets to dist branch (jsDelivr CDN reference)
-        run: |
-          cp -r dist/assets /tmp/installer-assets
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git checkout --orphan dist-temp
-          git reset --hard
-          git clean -fdx
-
-          mkdir -p backend/public/assets
-          cp -r /tmp/installer-assets/* backend/public/assets/
-          git add -f backend/public/assets/
-          git commit -m "assets: v${{ needs.version-bump.outputs.version }}"
-          git push origin dist-temp:dist --force
-
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.version-bump.outputs.sha }}
-
-      - name: Install dependencies
-        run: npm ci
+        run: npm run build
 
       - name: Build installer package (self-contained ZIP)
         run: npm run package
@@ -93,56 +52,44 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.version-bump.outputs.version }}
-          name: "🎮 CentralCorp Installer v${{ needs.version-bump.outputs.version }}"
+          tag_name: v${{ steps.version.outputs.version }}
+          name: "CentralCorp Installer v${{ steps.version.outputs.version }}"
           body: |
-            ## 🎮 CentralCorp Installer v${{ needs.version-bump.outputs.version }}
+            ## CentralCorp Installer v${{ steps.version.outputs.version }}
 
-            Installe ton panel CentralCorp en quelques clics — **aucune compétence technique requise** ! 🚀
-
-            ---
-
-            ### ⬇️ Télécharger
-
-            > ### 👉 [**📦 Télécharger installer.zip**](https://github.com/Geoventure-MC/Installer/releases/download/v${{ needs.version-bump.outputs.version }}/installer.zip)
+            Installe ton panel CentralCorp en quelques clics.
 
             ---
 
-            ### 🚀 Installation en 4 étapes
+            ### Telecharger
 
-            1. **Télécharge** le fichier `installer.zip` ci-dessous
-            2. **Extrais** son contenu à la racine de ton site web (dossier `www`, `public_html`, `htdocs`…)
+            > [**Telecharger installer.zip**](https://github.com/Geoventure-MC/Installer/releases/download/v${{ steps.version.outputs.version }}/installer.zip)
+
+            ---
+
+            ### Installation en 4 etapes
+
+            1. **Telecharge** le fichier `installer.zip` ci-dessous
+            2. **Extrais** son contenu a la racine de ton site web (dossier `www`, `public_html`, `htdocs`...)
             3. **Ouvre** ton domaine dans un navigateur (ex : `https://tonsite.fr`)
-            4. **Laisse-toi guider** par l'assistant — il s'occupe de tout ✨
+            4. **Laisse-toi guider** par l'assistant
 
             ---
 
-            ### ✨ Ce que l'installateur fait pour toi
+            ### Prerequis serveur
 
-            - ✅ Vérifie automatiquement que ton serveur est compatible
-            - 🎛️ Configure tes serveurs (Geoventure, Elandor, Pokeland) et l'auth du launcher
-            - 📥 Télécharge et installe le panel tout seul
-            - 🩺 Vérifie que tout fonctionne après l'installation (diagnostic intégré)
-            - 📱 Te donne les liens + un QR code pour télécharger le launcher
-            - 🔔 Peut prévenir ton serveur Discord quand l'installation est terminée
-            - 🔒 Supprime l'installateur en 1 clic pour sécuriser ton site
-
-            ---
-
-            ### 🖥️ Prérequis serveur
-
-            | Besoin | Détail |
+            | Besoin | Detail |
             |--------|--------|
-            | **PHP** | version **8.2** ou plus récente |
+            | **PHP** | version **8.2** ou plus recente |
             | **Extensions** | `bcmath` `curl` `fileinfo` `mbstring` `openssl` `PDO` `xml` `zip` |
             | **Serveur web** | Apache (avec `mod_rewrite`) ou Nginx |
 
             ---
 
-            ### ❓ Besoin d'aide ?
+            ### Besoin d'aide ?
 
-            - 🩺 La page finale contient un **bouton de diagnostic** qui t'indique précisément ce qui ne va pas
-            - 💬 Rejoins le [**Discord Geoventure**](https://discord.gg/VCmNXHvf77) — on est là pour t'aider !
+            - La page finale contient un **bouton de diagnostic** qui t'indique ce qui ne va pas
+            - Rejoins le [**Discord Geoventure**](https://discord.gg/VCmNXHvf77)
           files: installer.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
