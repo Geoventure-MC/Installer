@@ -27,7 +27,7 @@
  *
  * @author CentralCorp
  */
-$installerVersion = '1.0.1';
+$installerVersion = '1.0.2';
 
 $minPhpVersion = '8.2';
 
@@ -686,8 +686,8 @@ if (
     <link rel="icon" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Installation - CentralCorp Panel</title>
-    <script type="module" crossorigin src="/assets/index-CH9U6D0r.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-IWnMJsOy.css">
+    <script type="module" crossorigin src="/assets/index-BrRm5LLr.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CkXeTdG_.css">
 </head>
 
 <body>
