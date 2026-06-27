@@ -683,11 +683,11 @@ if (
 
 <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="https://centralcorp.github.io/img/panel.png" />
+    <link rel="icon" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Installation - CentralCorp Panel</title>
-    <script type="module" crossorigin src="/assets/index-D17sEWS1.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-D2X--sAd.css">
+    <script type="module" crossorigin src="/assets/index-CH9U6D0r.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-IWnMJsOy.css">
 </head>
 
 <body>

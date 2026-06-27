@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CentralCorpInstaller from './views/CentralCorpInstaller.vue'
 import { useI18n } from 'vue-i18n'
+import logoUrl from '@/assets/logo.png'
 
 const { t, locale } = useI18n()
 const currentYear = new Date().getFullYear()
@@ -52,9 +53,9 @@ function setLanguage(code: string) {
             <article class="card shadow-sm border-0" role="region" aria-labelledby="installer-title">
               <div class="card-body p-4 p-md-5">
                 <header class="text-center mb-4">
-                  <img 
-                    src="https://centralcorp.github.io/img/panel.png" 
-                    alt="CentralCorp Panel Logo" 
+                  <img
+                    :src="logoUrl"
+                    alt="CentralCorp Panel Logo"
                     class="mb-3" 
                     width="280"
                     height="auto"
